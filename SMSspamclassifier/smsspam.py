@@ -91,7 +91,7 @@ def simple_preprocess(text: str) -> str:
 		return ""
 	text = text.lower()
 	# remove urls
-	text = re.sub(r'http\S+|www\S+', ' ', text)
+	text = re.sub(r'http\S+|www\S+', 'URL', text)
 	# remove non-word characters (keep basic punctuation)
 	text = re.sub(r'[^\w\s@.-]', ' ', text)
 	text = re.sub(r'\s+', ' ', text).strip()
@@ -116,6 +116,9 @@ def build_and_eval(df: pd.DataFrame):
 
 	df['text_clean'] = df['text'].apply(simple_preprocess)
 
+	# Remove null/empty texts
+	df = df[df['text_clean'].str.len() > 0].copy()
+
 	X = df['text_clean']
 	y = df['label_num']
 
@@ -124,7 +127,7 @@ def build_and_eval(df: pd.DataFrame):
 
 	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 
-	vectorizer = TfidfVectorizer(stop_words='english', max_df=0.9, ngram_range=(1,2))
+	vectorizer = TfidfVectorizer(stop_words='english', max_df=0.9, min_df=1, ngram_range=(1,2), max_features=5000)
 	X_train_tfidf = vectorizer.fit_transform(X_train)
 	X_test_tfidf = vectorizer.transform(X_test)
 
